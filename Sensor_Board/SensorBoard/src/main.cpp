@@ -52,6 +52,6 @@ void loop()
   message = concatinate(temperature , distance);
   send(message);
   // Serial.println(message);
-  delay(500);
+  delay(200);
 }
 
