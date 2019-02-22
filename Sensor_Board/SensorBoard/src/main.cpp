@@ -8,6 +8,7 @@
 float temperature;
 const int trigPin = 12;
 const int echoPin = 13;
+const int numofBytes = 11;
 long duration;
 int distance;
 String message;
@@ -22,9 +23,22 @@ String concatinate(float temperature , int distance){
    str_distance = String(distance);
    str_temperature += "$";
    str_temperature += str_distance;
+   str_temperature += "#";
    return str_temperature ;
    
  }
+
+
+void send(String str){
+  char chararray [numofBytes];
+  str.toCharArray(chararray , numofBytes);
+  Serial.write(chararray);
+  // Serial.write('\n');
+}
+
+
+
+
 
 void setup()
 {
@@ -36,7 +50,8 @@ void loop()
   temperature = temp_sensor.cel();
   distance = hcsr04.distanceInMillimeters();
   message = concatinate(temperature , distance);
-  Serial.println(message);
+  send(message);
+  // Serial.println(message);
   delay(500);
 }
 
