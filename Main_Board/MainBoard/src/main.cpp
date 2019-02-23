@@ -1,33 +1,75 @@
 #include <Arduino.h>
 #include <Wire.h>
-#include <String.h>
 #include <LiquidCrystal.h>
 #include <AltSoftSerial.h>
 
 const int numofBytes = 11;
+const int numofutBytes = 5;
 const int temperature_bytes = 7;
 const int distance_bytes = 5;
-
-char temp[numofBytes];
-
+char sensorValue[numofBytes];
+char utValue [numofutBytes];
 char temperature[temperature_bytes] ; 
 char distance[distance_bytes] ;
 
-//LiquidCrystal lcd(7,8 , 9 , 10 , 11 , 12);
 LiquidCrystal lcd(7,4 , 5 , 10 , 11 , 12);
-AltSoftSerial altSerial;
-void splitter(char* temperature , char* distance , char* temp){
+AltSoftSerial blueSerial;
+
+void RecieveSensorData(char sensorValue[numofBytes]){
+  int i = 0 ;
+   // should be uncomment
+  while(Serial.available() && i < numofBytes - 1){
+    sensorValue[i] = Serial.read();
+    if(sensorValue[i] == '#')
+      {
+        i++;
+        sensorValue[i++]='\0';
+        break;
+      }
+    i++;
+  }
+}
+void RecieveUTData(char utValue [numofutBytes]){
+  
+  int i = 0;
+
+  while(blueSerial.available() && i < numofutBytes - 1){
+    
+    utValue[i] = blueSerial.read();
+    // if (temp2[])
+    i++;
+  }
+  utValue[i++]='\0';
+}
+void ShowOnLCD(char utValue [numofutBytes],char temperature[temperature_bytes],char distance[distance_bytes]){
+
+  lcd.setCursor(0,0);
+  lcd.print("UT value: ");
+  lcd.println(utValue);
+ 
+  lcd.setCursor(0, 1);
+  
+  lcd.print("Temp: ");
+  lcd.println(temperature);
+  
+  lcd.setCursor(-4,2);
+  
+  lcd.print("Dist: ");
+  lcd.println(distance);
+  
+}
+void Splitter(char* temperature , char* distance , char* temp){
   int pos = 0;
   String token;
-  while(temp[pos] != '$'){
-    temperature[pos] = temp[pos];
+  while(sensorValue[pos] != '$'){
+    temperature[pos] = sensorValue[pos];
     pos++;
   }
   temperature[pos] = '\0';
   pos++;
   int j = 0;
-  while(temp[pos] != '#'){
-    distance[j++] = temp[pos];
+  while(sensorValue[pos] != '#'){
+    distance[j++] = sensorValue[pos];
     pos++;
   }
   distance[pos] = '\0';
@@ -36,39 +78,22 @@ void splitter(char* temperature , char* distance , char* temp){
 
  void setup() {
 
+    blueSerial.begin(9600);
     Serial.begin(9600);
-    altSerial.begin(9600);
-    //altSerial.println("hello world!");
     lcd.begin(4, 20);
  }
 
  void loop() {
-  int i = 0 ;
-   
-  while(Serial.available() && i < numofBytes - 1){
-    temp[i] = Serial.read();
-    if(temp[i] == '#')
-      {
-        i++;
-        temp[i++]='\0';
-        break;
-      }
-    i++;
-  }
   
-  altSerial.println(temp);
-  splitter(temperature , distance , temp);  
-  lcd.print("Temp: ");
-  lcd.print(temperature);
   
-  lcd.setCursor(0, 1);
+  RecieveSensorData(sensorValue);
   
-  lcd.print("Dist: ");
-  lcd.print(distance);
+  Splitter(temperature , distance , sensorValue); 
   
-  lcd.setCursor(0, 0);
-  delay(200);
-  
- 
+  RecieveUTData(utValue);
 
+  ShowOnLCD(utValue,temperature,distance);
+    
+  delay(100);
+  
  }

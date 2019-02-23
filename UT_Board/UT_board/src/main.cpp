@@ -1,13 +1,15 @@
 #include <Arduino.h>
 #include <Wire.h>
+#include <AltSoftSerial.h>
 
 const int UT_SENSOR_ADDRESS = 110;
 const int X_FIRST_REG = 10;
 const int Y_FIRST_REG = 40;
+const int numofBytes = 5;
 float value = 0;
 float x ;
 float y ;
-//char x[4];
+AltSoftSerial blueSerial;
 
 
 void turnSensorOn(){
@@ -23,6 +25,7 @@ union {
     char c[4];
     float f;
   } chartof;
+
 
 float read_data(const int first_reg_adr ){
   
@@ -40,25 +43,30 @@ float read_data(const int first_reg_adr ){
   }
   return chartof.f;
 }
+void send(String str){
+  char chararray [numofBytes];
+  str.toCharArray(chararray , numofBytes);
+  blueSerial.write(chararray);
+}
 void setup() {
 
+  blueSerial.begin(9600);
   Serial.begin(9600);
   turnSensorOn();
   
 }
 
 void loop() {
-
-
   x = read_data(X_FIRST_REG); 
   y = read_data(Y_FIRST_REG);
-  Serial.println("X: ");
-  Serial.println(x);
-  Serial.println("Y: ");
-  Serial.println(y);
+  // Serial.println("X: ");
+  // Serial.println(x);
+  // Serial.println("Y: ");
+  // Serial.println(y);
   value += x*x + y*y;
-  Serial.println("Value: ");
-  Serial.println(value); 
+  // Serial.println("Value: ");
+  // Serial.println(value);
+  send(String(value));
   delay (100); 
   
 }
